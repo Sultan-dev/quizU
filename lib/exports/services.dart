@@ -1,0 +1,1 @@
+export 'package:quizu/services/auth_service.dart';

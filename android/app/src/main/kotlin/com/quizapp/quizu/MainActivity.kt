@@ -1,4 +1,4 @@
-package com.quizapp.quizu.quizu
+package com.quizapp.quizu
 
 import io.flutter.embedding.android.FlutterActivity
 

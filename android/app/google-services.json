@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "748556471409",
+    "project_id": "quizu-bf3ef",
+    "storage_bucket": "quizu-bf3ef.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:748556471409:android:33f678011c409320101fd0",
+        "android_client_info": {
+          "package_name": "com.quizapp.quizu"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "748556471409-9m1as0f5trrl7gfju63qi5kiudmgl8a6.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAvRVVDqReR-gdfZKc95GCD-s1x3ZxmmBY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "748556471409-9m1as0f5trrl7gfju63qi5kiudmgl8a6.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
