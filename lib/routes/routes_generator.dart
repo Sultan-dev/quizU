@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:quizu/exports/screens.dart';
+import 'package:quizu/exports/utils.dart' show FirestoreBuilder;
 import 'package:quizu/routes/routes.dart';
 
 class RoutesGenerator {
@@ -39,6 +40,18 @@ class RoutesGenerator {
         return PageRouteBuilder(
             settings: settings,
             pageBuilder: (_, __, ___) => VerificationScreen(),
+            transitionsBuilder: (_, a, __, c) =>
+                FadeTransition(opacity: a, child: c));
+      case Routes.registeration:
+        return PageRouteBuilder(
+            settings: settings,
+            pageBuilder: (_, __, ___) => RegisterationScreen(),
+            transitionsBuilder: (_, a, __, c) =>
+                FadeTransition(opacity: a, child: c));
+      case Routes.firestore_builder:
+        return PageRouteBuilder(
+            settings: settings,
+            pageBuilder: (_, __, ___) => FirestoreBuilder(),
             transitionsBuilder: (_, a, __, c) =>
                 FadeTransition(opacity: a, child: c));
       default:

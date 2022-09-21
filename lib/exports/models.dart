@@ -1,0 +1,1 @@
+export 'package:quizu/models/user.dart';

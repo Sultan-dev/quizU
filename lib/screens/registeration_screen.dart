@@ -1,54 +1,41 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:quizu/exports/components.dart'
-    show CustomElevatedButton, LoadingIndicator, Logo, PhoneTextField;
+    show CustomElevatedButton, LoadingIndicator, Logo, NameTextField;
+import 'package:quizu/exports/models.dart' show User;
+import 'package:quizu/exports/providers.dart';
 import 'package:quizu/exports/services.dart';
 import 'package:quizu/routes/routes.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({Key? key}) : super(key: key);
+class RegisterationScreen extends StatefulWidget {
+  const RegisterationScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<RegisterationScreen> createState() => _RegisterationScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _RegisterationScreenState extends State<RegisterationScreen> {
+  //firestore
+  final firestore = FirestoreService();
   // keys
   final GlobalKey<FormState> _formKey = GlobalKey();
 
   // controllers
-  TextEditingController phoneController = TextEditingController();
+  TextEditingController nameController = TextEditingController();
 
   // values
+  bool _isChecked = false;
   bool _submitted = false;
   bool _isLoading = false;
 
-  // methods
-  void initState() {
-    super.initState();
-
-    //controller listener for detecting if user type 0 at the beginning of the phone number
-    //user needs to enter the phone number in this format: 551236754
-    phoneController.addListener(
-      () {
-        if (phoneController.text.isNotEmpty &&
-            phoneController.text[0].contains('0') &&
-            phoneController.text.length >= 2) {
-          phoneController.text =
-              phoneController.text.replaceFirst(RegExp(r'^0+'), '');
-          phoneController.selection = TextSelection.fromPosition(
-              TextPosition(offset: phoneController.text.length));
-        }
-      },
-    );
-  }
-
+  //methods
+  // after clicking on done
   bool _onSubmit() {
     setState(() {
       _submitted = true;
     });
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
-      FocusScope.of(context).unfocus();
       return true;
     }
     return false;
@@ -60,39 +47,40 @@ class _LoginScreenState extends State<LoginScreen> {
     });
   }
 
-  void _loginAndNavigate() {
+  Future<void> _saveAndNavigate() async {
     if (!_isLoading) {
       if (_onSubmit()) {
         isLoading(true);
-        AuthService.instance
-            .setPhoneNumber('+966${phoneController.text.trim()}');
+        User user = User(
+            name: nameController.text.trim(),
+            phoneNumber: AuthService.instance.phoneNumber,
+            scores: []);
+        await firestore.createUser(user.toJson(), AuthService.instance.uid);
+        Provider.of<UserProvider>(context, listen: false).userLogedIn(user);
         isLoading(false);
-        Navigator.of(context).pushNamed(Routes.verification);
+        Navigator.of(context).pushReplacementNamed(Routes.home);
       }
     }
   }
 
   @override
   void dispose() {
-    phoneController.dispose();
+    nameController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-            backgroundColor: Colors.white,
-
-      appBar: AppBar(
+    return WillPopScope(
+      onWillPop: () async => false,
+      child: Scaffold(
         backgroundColor: Colors.white,
-        elevation: 0,
-        automaticallyImplyLeading: false,
-      ),
-      body: GestureDetector(
-        onTap: () {
-          FocusScope.of(context).unfocus();
-        },
-        child: Stack(
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          automaticallyImplyLeading: false,
+        ),
+        body: Stack(
           children: [
             Padding(
               padding: EdgeInsets.all(12.0),
@@ -103,25 +91,25 @@ class _LoginScreenState extends State<LoginScreen> {
                   Logo(),
                   SizedBox(height: 50),
                   Align(
-                    alignment: Alignment.centerLeft,
+                    alignment: Alignment.center,
                     child: Text(
-                      'Mobile Number',
+                      'What\'s your name?',
                       style: Theme.of(context).textTheme.headline6,
                     ),
                   ),
                   SizedBox(height: 10),
                   Form(
                     key: _formKey,
-                    child: PhoneTextField(
-                      controller: phoneController,
+                    child: NameTextField(
+                      controller: nameController,
                       submitted: _submitted,
                     ),
                   ),
                   SizedBox(height: 50),
                   CustomElevatedButton(
-                    text: 'Start',
-                    onPressed: () {
-                      _loginAndNavigate();
+                    text: 'Done',
+                    onPressed: () async {
+                      await _saveAndNavigate();
                     },
                   ),
                 ],

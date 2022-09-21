@@ -1,0 +1,1 @@
+export 'package:quizu/providers/user_provider.dart';

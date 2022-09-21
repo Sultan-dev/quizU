@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:quizu/exports/components.dart' show Logo;
 
 class SplashScreen extends StatelessWidget {
   final String content;
@@ -16,10 +17,12 @@ class SplashScreen extends StatelessWidget {
           children: [
             Column(
               children: [
+                Logo(),
+                SizedBox(height: 50),
                 loadingIndicator ? CircularProgressIndicator() : Container(),
                 SizedBox(height: 10),
                 Text(
-                  'Loading',
+                  content,
                   style: Theme.of(context).textTheme.headline6,
                 ),
               ],

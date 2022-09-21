@@ -14,9 +14,11 @@ class AuthService {
   String? _uid;
   String? _verificationID;
   int? _resendToken;
+  String? _phoneNumber; // to be in this format: +9665XXXXXXXX
 
   //getters
   String get uid => _uid!;
+  String get phoneNumber => _phoneNumber!;
 
   User? get current_user => _auth.currentUser;
 
@@ -28,10 +30,14 @@ class AuthService {
     _uid = uid;
   }
 
-  Future<void> verifyPhoneNumber(String phoneNumber) async {
+  void setPhoneNumber(String? phoneNumber) {
+    _phoneNumber = phoneNumber;
+  }
+
+  Future<void> verifyPhoneNumber() async {
     try {
       await _auth.verifyPhoneNumber(
-        phoneNumber: phoneNumber,
+        phoneNumber: _phoneNumber,
         verificationCompleted: (PhoneAuthCredential credential) async {},
         verificationFailed: (FirebaseAuthException e) {
           throw e;
@@ -69,7 +75,7 @@ class AuthService {
         return true;
       }
       //user signed out
-      throw 'error';
+      throw 'user signed out';
     } on FirebaseAuthException catch (e) {
       if (e.code == 'invalid-verification-code') {
         throw "invalid OTP";

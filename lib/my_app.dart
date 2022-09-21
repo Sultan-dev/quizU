@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:quizu/exports/components.dart' show SplashScreen;
 import 'package:quizu/exports/screens.dart' show LoginScreen, HomeScreen;
 import 'package:quizu/exports/services.dart' show AuthService;
-import 'package:quizu/exports/utils.dart' show AuthBuilder;
+import 'package:quizu/exports/utils.dart' show AuthBuilder, FirestoreBuilder;
 import 'package:quizu/routes/routes_generator.dart';
 
 class MyApp extends StatelessWidget {
@@ -24,14 +24,14 @@ class MyApp extends StatelessWidget {
             if (user != null) {
               AuthService.instance.setUID(user.uid);
               debugPrint(AuthService.instance.uid);
-              return HomeScreen();
+              return FirestoreBuilder();
             } else {
               return LoginScreen();
             }
           }
           if (snapshot.hasError) {
             return SplashScreen(
-              content: 'errors.went_wrong',
+              content: 'Something Went Wrong!',
               loadingIndicator: false,
             );
           }
