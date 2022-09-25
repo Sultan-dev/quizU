@@ -1,4 +1,4 @@
-# quizu
+# QuizU
 
 A new Flutter project.
 
