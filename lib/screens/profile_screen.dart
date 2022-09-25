@@ -1,7 +1,7 @@
 import 'package:awesome_icons/awesome_icons.dart';
 import 'package:flutter/material.dart';
-import 'package:quizu/exports/components.dart' show CustomSnackbar, Logo;
-import 'package:quizu/exports/services.dart' show AuthService;
+import 'package:quizu/cache/shared_preference_helper.dart';
+import 'package:quizu/exports/components.dart' show CustomSnackbar, Logo, Profile;
 import 'package:quizu/routes/routes.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -80,9 +80,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       appBar: AppBar(
         actions: [
           IconButton(
-            onPressed: () {
+            onPressed: () async {
               try {
-                AuthService.instance.signOut();
+                await SharedPreferencesHelper.instace.clearToken();
                 Navigator.of(context).pushReplacementNamed(Routes.login);
               } catch (e) {
                 CustomSnackbar.showSnackBar(context, e.toString());
@@ -102,6 +102,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         title: Logo(),
       ),
       bottomNavigationBar: _navigation(),
+      body: Profile(),
     );
   }
 }

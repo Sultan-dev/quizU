@@ -43,7 +43,6 @@ class PhoneTextField extends StatelessWidget {
             Radius.circular(5),
           ),
         ),
-        counterText: '',
         hintText: "5XXXXXXXX",
         hintStyle: Theme.of(context)
             .textTheme
@@ -69,7 +68,7 @@ class PhoneTextField extends StatelessWidget {
         } else if (controller.text.length < 9) {
           return "Must be 9 digits";
         } else if (!AppReg.numbers.hasMatch(controller.text)) {
-          return "Only numbers 1...9";
+          return "Only numbers 0...9";
         } else if (!_phoneReg()) {
           return "Phone number is not valid";
         }

@@ -75,7 +75,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildButton() {
     return ElevatedButton(
       onPressed: () {
-        //TODO: ACTION IS REQUIRED
+        Navigator.of(context).pushNamed(Routes.question_presenter);
       },
       child: Text(
         "Quiz Me!",

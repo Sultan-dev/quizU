@@ -1,9 +1,7 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:quizu/exports/components.dart' show SplashScreen;
-import 'package:quizu/exports/screens.dart' show LoginScreen, HomeScreen;
-import 'package:quizu/exports/services.dart' show AuthService;
-import 'package:quizu/exports/utils.dart' show AuthBuilder, FirestoreBuilder;
+import 'package:quizu/exports/screens.dart' show LoginScreen;
+import 'package:quizu/exports/utils.dart' show AuthBuilder, DataBuilder;
 import 'package:quizu/routes/routes_generator.dart';
 
 class MyApp extends StatelessWidget {
@@ -18,14 +16,15 @@ class MyApp extends StatelessWidget {
         scaffoldBackgroundColor: Color(0xffffffff),
       ),
       home: AuthBuilder(
-        builder: (BuildContext context, AsyncSnapshot<User?> snapshot) {
-          if (snapshot.connectionState == ConnectionState.active) {
-            User? user = snapshot.data;
-            if (user != null) {
-              AuthService.instance.setUID(user.uid);
-              debugPrint(AuthService.instance.uid);
-              return FirestoreBuilder();
-            } else {
+        builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            bool? result = snapshot.data;
+            if (result != null) {
+              if (result) {
+                //token is verified
+                return DataBuilder();
+              }
+              //not registered
               return LoginScreen();
             }
           }

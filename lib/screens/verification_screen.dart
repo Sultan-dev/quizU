@@ -9,24 +9,22 @@ import 'package:quizu/exports/providers.dart' show UserProvider;
 import 'package:quizu/exports/services.dart';
 import 'package:quizu/routes/routes.dart';
 
+import '../cache/shared_preference_helper.dart';
+
 class VerificationScreen extends StatefulWidget {
-  const VerificationScreen({super.key});
+  final String mobile;
+  VerificationScreen({required this.mobile});
 
   @override
   State<VerificationScreen> createState() => _VerificationScreenState();
 }
 
 class _VerificationScreenState extends State<VerificationScreen> {
-  //database
-  final firestore = FirestoreService();
-
   // controllers
   TextEditingController fieldOneController = TextEditingController();
   TextEditingController fieldTwoController = TextEditingController();
   TextEditingController fieldThreeController = TextEditingController();
   TextEditingController fieldFourController = TextEditingController();
-  TextEditingController fieldFiveController = TextEditingController();
-  TextEditingController fieldSixController = TextEditingController();
 
   // values
   static const maxSeconds = 60;
@@ -34,23 +32,13 @@ class _VerificationScreenState extends State<VerificationScreen> {
   bool _stopped = false;
   Timer? timer;
   bool _isLoading = false;
-  String _OTP = '';
+  String _otp = '';
 
   // methods
   @override
   void initState() {
     super.initState();
-    _verifyPhoneNumber();
     _startTimer();
-  }
-
-  //calling auth provide to verify the phone number
-  Future<void> _verifyPhoneNumber() async {
-    try {
-      await AuthService.instance.verifyPhoneNumber();
-    } catch (e) {
-      CustomSnackbar.showSnackBar(context, e.toString());
-    }
   }
 
   //validating data of the otp fields
@@ -68,9 +56,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
         (fieldTwoController.text.isEmpty || fieldTwoController.text == '') ||
         (fieldThreeController.text.isEmpty ||
             fieldThreeController.text == '') ||
-        (fieldFourController.text.isEmpty || fieldFourController.text == '') ||
-        (fieldFiveController.text.isEmpty || fieldFiveController.text == '') ||
-        (fieldSixController.text.isEmpty || fieldSixController.text == '')) {
+        (fieldFourController.text.isEmpty || fieldFourController.text == '')) {
       return false;
     }
     return true;
@@ -108,17 +94,13 @@ class _VerificationScreenState extends State<VerificationScreen> {
     fieldTwoController.clear();
     fieldThreeController.clear();
     fieldFourController.clear();
-    fieldFiveController.clear();
-    fieldSixController.clear();
   }
 
   void _gatherOTP() {
-    _OTP = fieldOneController.text.trim() +
+    _otp = fieldOneController.text.trim() +
         fieldTwoController.text.trim() +
         fieldThreeController.text.trim() +
-        fieldFourController.text.trim() +
-        fieldFiveController.text.trim() +
-        fieldSixController.text.trim();
+        fieldFourController.text.trim();
   }
 
   Future<void> _verify() async {
@@ -128,39 +110,50 @@ class _VerificationScreenState extends State<VerificationScreen> {
       if (_onSubmit()) {
         isLoading(true);
         try {
-          bool result = await AuthService.instance.signInWithCredential(_OTP);
-          if (result) {
-            //successful sing in
-            bool isExists =
-                await firestore.checkUserExistance(AuthService.instance.uid);
-            if (isExists) {
-              await _getUserDataAndNavigate();
+          final network = Provider.of<NetworkService>(context, listen: false);
+          Map<String, dynamic> data = await network.login(widget.mobile, _otp);
+
+          //if the key 'user_status' not found it will return null, it means the user is already exists
+          //else then the user is new
+          String userStatus = data["user_status"] ?? "already exists";
+
+          if (userStatus == "new") {
+            //new user is created
+            //store token in the shared_preferences
+            await SharedPreferencesHelper.instace.setToken(data["token"]);
+            //navigate to user registeration to get user name
+            Navigator.of(context).pushReplacementNamed(
+              Routes.registeration,
+              arguments: widget.mobile,
+            );
+          } else {
+            //user signed in
+            if (data["name"] == null) {
+              //means the user logged in but not completed his information
+              //store token in the shared_preferences
+              await SharedPreferencesHelper.instace.setToken(data["token"]);
+              //navigate to user registeration to get user name
+              Navigator.of(context).pushReplacementNamed(
+                Routes.registeration,
+                arguments: widget.mobile,
+              );
             } else {
-              isLoading(false);
-              Navigator.of(context).pushReplacementNamed(Routes.registeration);
+              //his information is completed
+              User user = User.fromJson(data);
+              Provider.of<UserProvider>(context, listen: false)
+                  .userLogedIn(user);
+              //save token in shared prefs
+              await SharedPreferencesHelper.instace.setToken(data["token"]);
+              Navigator.of(context).pushReplacementNamed(Routes.data_builder);
             }
           }
         } catch (e) {
           isLoading(false);
           CustomSnackbar.showSnackBar(context, e.toString());
         }
-      }
-    }
-  }
-
-  Future<void> _getUserDataAndNavigate() async {
-    try {
-      User? user = await firestore.getUser(AuthService.instance.uid);
-      isLoading(false);
-      if (user != null) {
-        Provider.of<UserProvider>(context, listen: false).userLogedIn(user);
-        Navigator.of(context).pushReplacementNamed(Routes.home);
       } else {
-        //no doc created with this crossponding user
-        Navigator.of(context).pushReplacementNamed(Routes.registeration);
+        CustomSnackbar.showSnackBar(context, "Fields must not be empty");
       }
-    } catch (e) {
-      CustomSnackbar.showSnackBar(context, e.toString());
     }
   }
 
@@ -171,8 +164,6 @@ class _VerificationScreenState extends State<VerificationScreen> {
     fieldTwoController.dispose();
     fieldThreeController.dispose();
     fieldFourController.dispose();
-    fieldFiveController.dispose();
-    fieldSixController.dispose();
     super.dispose();
   }
 
@@ -219,7 +210,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
                           children: [
                             Expanded(
                               child: Text(
-                                'Please enter the OTP code sent to your mobile',
+                                'Please enter the OTP code sent to your mobile ${widget.mobile}',
                                 style: Theme.of(context)
                                     .textTheme
                                     .headline6
@@ -269,26 +260,6 @@ class _VerificationScreenState extends State<VerificationScreen> {
                               autofocus: false,
                               onChanged: (value) {
                                 if (value.length == 1) {
-                                  FocusScope.of(context).nextFocus();
-                                }
-                              },
-                            ),
-                            Spacer(),
-                            OTPField(
-                              controller: fieldFiveController,
-                              autofocus: false,
-                              onChanged: (value) {
-                                if (value.length == 1) {
-                                  FocusScope.of(context).nextFocus();
-                                }
-                              },
-                            ),
-                            Spacer(),
-                            OTPField(
-                              controller: fieldSixController,
-                              autofocus: false,
-                              onChanged: (value) async {
-                                if (value.length == 1) {
                                   FocusScope.of(context).unfocus();
                                 }
                               },
@@ -306,7 +277,6 @@ class _VerificationScreenState extends State<VerificationScreen> {
                                 FocusScope.of(context).unfocus();
                                 _clearContentOfControllers();
                                 _startTimer();
-                                _verifyPhoneNumber();
                               }
                             }
                           },

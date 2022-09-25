@@ -1,22 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:quizu/cache/shared_preference_helper.dart';
 import 'package:quizu/exports/components.dart'
-    show CustomElevatedButton, LoadingIndicator, Logo, NameTextField;
+    show
+        CustomElevatedButton,
+        CustomSnackbar,
+        LoadingIndicator,
+        Logo,
+        NameTextField;
 import 'package:quizu/exports/models.dart' show User;
 import 'package:quizu/exports/providers.dart';
 import 'package:quizu/exports/services.dart';
 import 'package:quizu/routes/routes.dart';
 
 class RegisterationScreen extends StatefulWidget {
-  const RegisterationScreen({super.key});
+  final String mobile;
+  const RegisterationScreen({
+    required this.mobile,
+  });
 
   @override
   State<RegisterationScreen> createState() => _RegisterationScreenState();
 }
 
 class _RegisterationScreenState extends State<RegisterationScreen> {
-  //firestore
-  final firestore = FirestoreService();
   // keys
   final GlobalKey<FormState> _formKey = GlobalKey();
 
@@ -24,7 +31,6 @@ class _RegisterationScreenState extends State<RegisterationScreen> {
   TextEditingController nameController = TextEditingController();
 
   // values
-  bool _isChecked = false;
   bool _submitted = false;
   bool _isLoading = false;
 
@@ -51,14 +57,36 @@ class _RegisterationScreenState extends State<RegisterationScreen> {
     if (!_isLoading) {
       if (_onSubmit()) {
         isLoading(true);
-        User user = User(
+        try {
+          final network = Provider.of<NetworkService>(context, listen: false);
+
+          //store user name
+          await network.storeUserName(nameController.text.trim());
+
+          //get user token
+          String token = await SharedPreferencesHelper.instace.getToken();
+
+          //create user object
+          User user = User(
             name: nameController.text.trim(),
-            phoneNumber: AuthService.instance.phoneNumber,
-            scores: []);
-        await firestore.createUser(user.toJson(), AuthService.instance.uid);
-        Provider.of<UserProvider>(context, listen: false).userLogedIn(user);
-        isLoading(false);
-        Navigator.of(context).pushReplacementNamed(Routes.home);
+            mobile: widget.mobile,
+            token: token,
+          );
+
+          Provider.of<UserProvider>(context, listen: false).userLogedIn(user);
+          isLoading(false);
+
+          //will need to get the questions and scores from cache prefs
+          //so we need to go to the data builder
+          Navigator.of(context).pushReplacementNamed(Routes.data_builder);
+        } catch (e) {
+          if (e.toString() == 'Token is invalid') {
+            CustomSnackbar.showSnackBar(context, "Sign-in Error");
+            Navigator.of(context).pushReplacementNamed(Routes.login);
+          } else {
+            CustomSnackbar.showSnackBar(context, e.toString());
+          }
+        }
       }
     }
   }
@@ -80,43 +108,46 @@ class _RegisterationScreenState extends State<RegisterationScreen> {
           elevation: 0,
           automaticallyImplyLeading: false,
         ),
-        body: Stack(
-          children: [
-            Padding(
-              padding: EdgeInsets.all(12.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Logo(),
-                  SizedBox(height: 50),
-                  Align(
-                    alignment: Alignment.center,
-                    child: Text(
+        body: GestureDetector(
+          onTap: () {
+            FocusScope.of(context).unfocus();
+          },
+          child: Stack(
+            children: [
+              Padding(
+                padding: EdgeInsets.all(12.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Logo(),
+                    SizedBox(height: 50),
+                    Text(
                       'What\'s your name?',
                       style: Theme.of(context).textTheme.headline6,
                     ),
-                  ),
-                  SizedBox(height: 10),
-                  Form(
-                    key: _formKey,
-                    child: NameTextField(
-                      controller: nameController,
-                      submitted: _submitted,
+                    SizedBox(height: 10),
+                    Form(
+                      key: _formKey,
+                      child: NameTextField(
+                        controller: nameController,
+                        submitted: _submitted,
+                      ),
                     ),
-                  ),
-                  SizedBox(height: 50),
-                  CustomElevatedButton(
-                    text: 'Done',
-                    onPressed: () async {
-                      await _saveAndNavigate();
-                    },
-                  ),
-                ],
+                    SizedBox(height: 50),
+                    CustomElevatedButton(
+                      text: 'Done',
+                      onPressed: () async {
+                        await _saveAndNavigate();
+                      },
+                    ),
+                  ],
+                ),
               ),
-            ),
-            LoadingIndicator(isLoading: _isLoading),
-          ],
+              LoadingIndicator(isLoading: _isLoading),
+            ],
+          ),
         ),
       ),
     );

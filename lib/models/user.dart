@@ -1,24 +1,24 @@
 class User {
   final String name;
-  final String phoneNumber;
-  final List<dynamic> scores;
+  final String mobile;
+  final String token;
 
   User({
     required this.name,
-    required this.phoneNumber,
-    required this.scores,
+    required this.mobile,
+    required this.token,
   });
 
   User.fromJson(Map<String, dynamic> data)
       : this(
           name: data["name"],
-          phoneNumber: data["phoneNumber"],
-          scores: data["scores"],
+          mobile: data["mobile"],
+          token: data["token"],
         );
 
   Map<String, dynamic> toJson() => {
         "name": name,
-        "phoneNumber": phoneNumber,
-        "scores": scores,
+        "mobile": mobile,
+        "token": token,
       };
 }

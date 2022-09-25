@@ -1,9 +1,9 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:quizu/exports/services.dart' show AuthService;
+import 'package:provider/provider.dart';
+import 'package:quizu/exports/services.dart' show NetworkService;
 
 class AuthBuilder extends StatefulWidget {
-  final Widget Function(BuildContext, AsyncSnapshot<User?>) builder;
+  final Widget Function(BuildContext, AsyncSnapshot<bool>) builder;
   AuthBuilder({required this.builder});
 
   @override
@@ -12,24 +12,26 @@ class AuthBuilder extends StatefulWidget {
 
 class _AuthBuilderState extends State<AuthBuilder> {
   //streams
-  late final Stream<User?> _userStream;
+  late final Future<bool> _isValidToken;
 
   //methods
   @override
   void initState() {
     super.initState();
-    _userStream = _getUserStream();
+    _isValidToken = _checkIsValidToken();
   }
 
-  Stream<User?> _getUserStream() {
-    return AuthService.instance.user;
+  Future<bool> _checkIsValidToken() async{
+    final network = Provider.of<NetworkService>(context, listen: false);
+    bool result = await network.verifyToken();
+    return result;
   }
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<User?>(
-      stream: _userStream,
-      builder: (BuildContext context, AsyncSnapshot<User?> snapshot) {
+    return FutureBuilder<bool>(
+      future: _isValidToken,
+      builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
         return widget.builder(context, snapshot);
       },
     );

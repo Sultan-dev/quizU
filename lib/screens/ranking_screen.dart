@@ -1,6 +1,6 @@
 import 'package:awesome_icons/awesome_icons.dart';
 import 'package:flutter/material.dart';
-import 'package:quizu/exports/components.dart' show Logo;
+import 'package:quizu/exports/components.dart' show LeaderBoard, Logo;
 import 'package:quizu/routes/routes.dart';
 
 class RankingScreen extends StatefulWidget {
@@ -84,6 +84,7 @@ class _RankingScreenState extends State<RankingScreen> {
         title: Logo(),
       ),
       bottomNavigationBar: _navigation(),
+      body: LeaderBoard(),
     );
   }
 }

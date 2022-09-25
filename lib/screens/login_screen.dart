@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:quizu/exports/components.dart'
     show CustomElevatedButton, LoadingIndicator, Logo, PhoneTextField;
-import 'package:quizu/exports/services.dart';
 import 'package:quizu/routes/routes.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -64,10 +63,9 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!_isLoading) {
       if (_onSubmit()) {
         isLoading(true);
-        AuthService.instance
-            .setPhoneNumber('+966${phoneController.text.trim()}');
+        String mobile = '0${phoneController.text.trim()}';
         isLoading(false);
-        Navigator.of(context).pushNamed(Routes.verification);
+        Navigator.of(context).pushNamed(Routes.verification, arguments: mobile);
       }
     }
   }
@@ -81,8 +79,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-            backgroundColor: Colors.white,
-
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
